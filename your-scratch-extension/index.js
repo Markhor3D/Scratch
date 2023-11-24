@@ -205,6 +205,11 @@ function initBLE() {
         })
         .then((device) => {
             console.log("Connecting to GATT Server...");
+              // Listen for disconnection event
+              device.addEventListener("gattserverdisconnected", (event) => {
+                console.log("Disconnected from the GATT Server");
+                  bleIsConnected = false;
+              }
             return device.gatt.connect();
         })
         .then((server) => {
