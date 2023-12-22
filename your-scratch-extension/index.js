@@ -154,10 +154,10 @@ function writeBLEString(characteristic, stringToSend) {
         });
 }
 function setLeftMotor(value) {
-    writeBLEFloat(leftMotorCharacteristic, value);
+    writeBLEFloat(leftMotorCharacteristic, value / 100);
 }
 function setRightMotor(value) {
-    writeBLEFloat(rightMotorCharacteristic, value);
+    writeBLEFloat(rightMotorCharacteristic, value / 100);
 }
 function setServoAAngle(value) {
     writeBLEFloat(servoAAngleCharacteristic, value);
@@ -205,11 +205,6 @@ function initBLE() {
         })
         .then((device) => {
             console.log("Connecting to GATT Server...");
-              // Listen for disconnection event
-              device.addEventListener("gattserverdisconnected", (event) => {
-                console.log("Disconnected from the GATT Server");
-                  bleIsConnected = false;
-              }
             return device.gatt.connect();
         })
         .then((server) => {
@@ -286,6 +281,7 @@ function initBLE() {
             service.getCharacteristic(textMessageUUID).then((ch) => {
                 console.log("Got: textMessage characteristic");
                 textMessageCharacteristic = ch;
+                alert('M3D Go connected!');
             });
             return Promise.resolve();
         })
@@ -306,41 +302,47 @@ function GoIsConnected() {
     return wsIsConnected || bleIsConnected;
 }
 function sendLeftMotorCommand(power) {
-    if (lastLeftMotor == power) return true;
+    if (lastLeftMotor == power)
+        return true;
 
     if (bleIsConnected) {
+        lastLeftMotor = power;
         setLeftMotor(power);
         return true;
     }
     else {
         if (sendCommand("lm " + power + "%")) {
+            lastLeftMotor = power;
             return true;
         }
     }
-    lastLeftMotor = power;
     return false;
 }
 
 function sendRightMotorCommand(power) {
-    if (lastRightMotor == power) return true;
+    if (lastRightMotor == power)
+        return true;
+
     if (bleIsConnected) {
+        lastRightMotor = power;
         setRightMotor(power);
         return true;
     }
     else {
         if (sendCommand("rm " + power + "%")) {
+            lastRightMotor = power;
             return true;
         }
     }
-    lastRightMotor = power;
     return false;
 }
 function sendServo1Command(angle) {
 
-    if (lastServo1 == angle) return true;
+    if (lastServo1 == angle)
+        return true;
     if (bleIsConnected) {
-        setServoAAngle(angle);
         lastServo1 = angle;
+        setServoAAngle(angle);
         return true;
     }
     else {
@@ -351,10 +353,11 @@ function sendServo1Command(angle) {
 }
 function sendServo2Command(angle) {
 
-    if (lastServo2 == angle) return true;
+    if (lastServo2 == angle) 
+        return true;
     if (bleIsConnected) {
-        setServoBAngle(angle);
         lastServo2 = angle;
+        setServoBAngle(angle);
         return true;
     }
     else {
@@ -365,54 +368,61 @@ function sendServo2Command(angle) {
 }
 function sendServo1SpeedCommand(speed) {
 
-    if (lastServo1Speed == speed) return true;
+    if (lastServo1Speed == speed)
+        return true;
     if (bleIsConnected) {
+        lastServo1Speed = speed;
         setServoASpeed(speed);
-        lastServo1 = speed;
         return true;
     }
     else {
         if (sendCommand("servo 1 " + speed))
-            lastServo1 = speed;
+            lastServo1Speed = speed;
         return true;
     }
 }
 function sendServo2SpeedCommand(speed) {
 
-    if (lastServo2Speed == speed) return true;
+    if (lastServo2Speed == speed)
+        return true;
     if (bleIsConnected) {
+        lastServo2Speed = speed;
         setServoBSpeed(speed);
-        lastServo2 = speed;
         return true;
     }
     else {
         if (sendCommand("servo 2 " + speed))
-            lastServo2 = speed;
+            lastServo2Speed = speed;
         return true;
     }
 }
 function sendExpressionCommand(expression) {
+    var com = "express " + expression;
+    if (lastScreenMsg == com) 
+        return true;
     if (bleIsConnected) {
+        lastScreenMsg = com;
         setExpresssion(expression);
         return true;
     }
     else {
-        var com = "express " + expression;
-        if (lastScreenMsg == com) return true;
-        if (sendCommand(com)) lastScreenMsg = com;
+        if (sendCommand(com)) 
+            lastScreenMsg = com;
         return true;
     }
 }
 function sendTextMessageCommand(text) {
-
+    var com = "show " + text;
+    if (lastScreenMsg == com) 
+        return true;
     if (bleIsConnected) {
+        lastScreenMsg = com;
         setTextMessage(text);
         return true;
     }
     else {
-        var com = "show " + TEXT;
-        if (lastScreenMsg == com) return true;
-        if (sendCommand(com)) lastScreenMsg = com;
+        if (sendCommand(com)) 
+            lastScreenMsg = com;
         return true;
     }
 }
@@ -596,7 +606,7 @@ class Scratch3YourExtension {
                     }
                 }
             }, {
-                opcode: 'setRighttMotorSpeed',
+                opcode: 'setRightMotorSpeed',
                 blockType: BlockType.COMMAND,
                 text: 'Set right motor at [POWER]%',
                 terminal: false,
