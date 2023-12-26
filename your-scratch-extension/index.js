@@ -226,62 +226,61 @@ function initBLE() {
                         proximityACharacteristicChangeHandler
                     );
                 });
-            });
-            service.getCharacteristic(proximityBUUID).then((ch) => {
-                console.log("Got: proximityB characteristic");
-                proximityCharacteristic = ch;
-                ch.startNotifications().then((_) => {
-                    console.log("");
-                    proximityCharacteristic.addEventListener(
-                        "characteristicvaluechanged",
-                        proximityBCharacteristicChangeHandler
-                    );
+                service.getCharacteristic(proximityBUUID).then((ch) => {
+                    console.log("Got: proximityB characteristic");
+                    proximityCharacteristic = ch;
+                    ch.startNotifications().then((_) => {
+                        console.log("");
+                        proximityCharacteristic.addEventListener(
+                            "characteristicvaluechanged",
+                            proximityBCharacteristicChangeHandler
+                        );
+                    });
+                    service.getCharacteristic(distanceUUID).then((ch) => {
+                        console.log("Got: distance characteristic");
+                        distancCharacteristic = ch;
+                        ch.startNotifications().then((_) => {
+                            console.log("");
+                            distancCharacteristic.addEventListener(
+                                "characteristicvaluechanged",
+                                distancCharacteristicChangeHandler
+                            );
+                        });
+                        service.getCharacteristic(leftMotorUUID).then((ch) => {
+                            console.log("Got: leftMotor characteristic");
+                            leftMotorCharacteristic = ch;
+                            service.getCharacteristic(rightMotorUUID).then((ch) => {
+                                console.log("Got: rightMotor characteristic");
+                                rightMotorCharacteristic = ch;
+                                service.getCharacteristic(servoAAngleUUID).then((ch) => {
+                                    console.log("Got: servoAAngle characteristic");
+                                    servoAAngleCharacteristic = ch;
+                                    service.getCharacteristic(servoBAngleUUID).then((ch) => {
+                                        console.log("Got: servoBAngle characteristic");
+                                        servoBAngleCharacteristic = ch;
+                                        service.getCharacteristic(servoASpeedUUID).then((ch) => {
+                                            console.log("Got: servoASpeed characteristic");
+                                            servoASpeedCharacteristic = ch;
+                                            service.getCharacteristic(servoBSpeedUUID).then((ch) => {
+                                                console.log("Got: servoBSpeed characteristic");
+                                                servoBSpeedCharacteristic = ch;
+                                                service.getCharacteristic(expressionUUID).then((ch) => {
+                                                    console.log("Got: expression characteristic");
+                                                    expressionCharacteristic = ch;
+                                                    service.getCharacteristic(textMessageUUID).then((ch) => {
+                                                        console.log("Got: textMessage characteristic");
+                                                        textMessageCharacteristic = ch;
+                                                        alert('M3D Go connected!');
+                                                    });
+                                                });
+                                            });
+                                        });
+                                    });
+                                });
+                            });
+                        });
+                    });
                 });
-            });
-            service.getCharacteristic(distanceUUID).then((ch) => {
-                console.log("Got: distance characteristic");
-                distancCharacteristic = ch;
-                ch.startNotifications().then((_) => {
-                    console.log("");
-                    distancCharacteristic.addEventListener(
-                        "characteristicvaluechanged",
-                        distancCharacteristicChangeHandler
-                    );
-                });
-            });
-            service.getCharacteristic(leftMotorUUID).then((ch) => {
-                console.log("Got: leftMotor characteristic");
-                leftMotorCharacteristic = ch;
-            });
-            service.getCharacteristic(rightMotorUUID).then((ch) => {
-                console.log("Got: rightMotor characteristic");
-                rightMotorCharacteristic = ch;
-            });
-            service.getCharacteristic(servoAAngleUUID).then((ch) => {
-                console.log("Got: servoAAngle characteristic");
-                servoAAngleCharacteristic = ch;
-            });
-            service.getCharacteristic(servoBAngleUUID).then((ch) => {
-                console.log("Got: servoBAngle characteristic");
-                servoBAngleCharacteristic = ch;
-            });
-            service.getCharacteristic(servoASpeedUUID).then((ch) => {
-                console.log("Got: servoASpeed characteristic");
-                servoASpeedCharacteristic = ch;
-            });
-            service.getCharacteristic(servoBSpeedUUID).then((ch) => {
-                console.log("Got: servoBSpeed characteristic");
-                servoBSpeedCharacteristic = ch;
-            });
-            service.getCharacteristic(expressionUUID).then((ch) => {
-                console.log("Got: expression characteristic");
-                expressionCharacteristic = ch;
-            });
-
-            service.getCharacteristic(textMessageUUID).then((ch) => {
-                console.log("Got: textMessage characteristic");
-                textMessageCharacteristic = ch;
-                alert('M3D Go connected!');
             });
             return Promise.resolve();
         })
