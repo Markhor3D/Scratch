@@ -107,6 +107,8 @@ var servoBSpeedCharacteristic;
 var expressionCharacteristic;
 var textMessageCharacteristic;
 
+var BLEDevice;
+
 function writeBLEFloat(characteristic, floatValue) {
     if (!characteristic) {
         console.log("Characteristic invalid");
@@ -195,6 +197,12 @@ function distancCharacteristicChangeHandler(event) {
     // console.log("Received distance: ", floatValue);
     Sensors[2] = floatValue;
 }
+function endBLE(){
+    if(bleIsConnected){
+        BLEDevice.gatt.disconnect();
+        bleIsConnected = false;
+    }
+}
 function initBLE() {
     console.log("begin");
     console.log("Requesting any Bluetooth Device...");
@@ -205,6 +213,7 @@ function initBLE() {
         })
         .then((device) => {
             console.log("Connecting to GATT Server...");
+            BLEDevice = device;
             return device.gatt.connect();
         })
         .then((server) => {
@@ -216,60 +225,60 @@ function initBLE() {
         .then((service) => {
             console.log("Setting up characteristics watch");
             bleIsConnected = true;
-            service.getCharacteristic(proximityAUUID).then((ch) => {
+            service.getCharacteristic(proximityAUUID).then((ch0) => {
                 console.log("Got: proximityA characteristic");
-                proximityCharacteristic = ch;
-                ch.startNotifications().then((_) => {
-                    console.log("");
-                    ch.addEventListener(
-                        "characteristicvaluechanged",
-                        proximityACharacteristicChangeHandler
-                    );
-                });
-                service.getCharacteristic(proximityBUUID).then((ch) => {
+                proximityACharacteristic = ch0;
+                service.getCharacteristic(proximityBUUID).then((ch1) => {
                     console.log("Got: proximityB characteristic");
-                    proximityCharacteristic = ch;
-                    ch.startNotifications().then((_) => {
-                        console.log("");
-                        proximityCharacteristic.addEventListener(
-                            "characteristicvaluechanged",
-                            proximityBCharacteristicChangeHandler
-                        );
-                    });
-                    service.getCharacteristic(distanceUUID).then((ch) => {
+                    proximityBCharacteristic = ch1;
+                    service.getCharacteristic(distanceUUID).then((ch2) => {
                         console.log("Got: distance characteristic");
-                        distancCharacteristic = ch;
-                        ch.startNotifications().then((_) => {
-                            console.log("");
-                            distancCharacteristic.addEventListener(
-                                "characteristicvaluechanged",
-                                distancCharacteristicChangeHandler
-                            );
-                        });
-                        service.getCharacteristic(leftMotorUUID).then((ch) => {
+                        distancCharacteristic = ch2;
+                        service.getCharacteristic(leftMotorUUID).then((ch3) => {
                             console.log("Got: leftMotor characteristic");
-                            leftMotorCharacteristic = ch;
-                            service.getCharacteristic(rightMotorUUID).then((ch) => {
+                            leftMotorCharacteristic = ch3;
+                            service.getCharacteristic(rightMotorUUID).then((ch4) => {
                                 console.log("Got: rightMotor characteristic");
-                                rightMotorCharacteristic = ch;
-                                service.getCharacteristic(servoAAngleUUID).then((ch) => {
+                                rightMotorCharacteristic = ch4;
+                                service.getCharacteristic(servoAAngleUUID).then((ch5) => {
                                     console.log("Got: servoAAngle characteristic");
-                                    servoAAngleCharacteristic = ch;
-                                    service.getCharacteristic(servoBAngleUUID).then((ch) => {
+                                    servoAAngleCharacteristic = ch5;
+                                    service.getCharacteristic(servoBAngleUUID).then((ch6) => {
                                         console.log("Got: servoBAngle characteristic");
-                                        servoBAngleCharacteristic = ch;
-                                        service.getCharacteristic(servoASpeedUUID).then((ch) => {
+                                        servoBAngleCharacteristic = ch6;
+                                        service.getCharacteristic(servoASpeedUUID).then((ch7) => {
                                             console.log("Got: servoASpeed characteristic");
-                                            servoASpeedCharacteristic = ch;
-                                            service.getCharacteristic(servoBSpeedUUID).then((ch) => {
+                                            servoASpeedCharacteristic = ch7;
+                                            service.getCharacteristic(servoBSpeedUUID).then((ch8) => {
                                                 console.log("Got: servoBSpeed characteristic");
-                                                servoBSpeedCharacteristic = ch;
-                                                service.getCharacteristic(expressionUUID).then((ch) => {
+                                                servoBSpeedCharacteristic = ch8;
+                                                service.getCharacteristic(expressionUUID).then((ch9) => {
                                                     console.log("Got: expression characteristic");
-                                                    expressionCharacteristic = ch;
-                                                    service.getCharacteristic(textMessageUUID).then((ch) => {
+                                                    expressionCharacteristic = ch9;
+                                                    service.getCharacteristic(textMessageUUID).then((ch10) => {
                                                         console.log("Got: textMessage characteristic");
-                                                        textMessageCharacteristic = ch;
+                                                        textMessageCharacteristic = ch10;
+                                                        
+                                                        proximityACharacteristic.startNotifications().then((_) => {
+                                                            proximityACharacteristic.addEventListener(
+                                                                "characteristicvaluechanged",
+                                                                proximityACharacteristicChangeHandler
+                                                            );
+                                                            
+                                                            proximityBCharacteristic.startNotifications().then((_) => {
+                                                                proximityBCharacteristic.addEventListener(
+                                                                    "characteristicvaluechanged",
+                                                                    proximityBCharacteristicChangeHandler
+                                                                );
+                                                                
+                                                                distancCharacteristic.startNotifications().then((_) => {
+                                                                    distancCharacteristic.addEventListener(
+                                                                        "characteristicvaluechanged",
+                                                                        distancCharacteristicChangeHandler
+                                                                    );
+                                                                });
+                                                            });
+                                                        });
                                                         alert('M3D Go connected!');
                                                     });
                                                 });
@@ -429,6 +438,7 @@ class Scratch3YourExtension {
 
     constructor(runtime) {
         // put any setup for your extension here
+        console.log('M3D Go Extension loaded');
     }
 
     /**
@@ -470,7 +480,7 @@ class Scratch3YourExtension {
                     //     ArgumentType.STRING - text value
                     //     ArgumentType.NOTE - midi music value with a piano picker
                 }
-            }, {
+            }, /*{
                 opcode: 'connectRequestBlock',
                 blockType: BlockType.COMMAND,
                 text: 'Connect M3D Go at [MY_ADDRESS]',
@@ -482,10 +492,20 @@ class Scratch3YourExtension {
                         type: ArgumentType.STRING
                     }
                 }
-            }, {
+            }, */ 
+            {
                 opcode: 'connectRequestBlockBLE',
                 blockType: BlockType.COMMAND,
                 text: 'Connect M3D Go with Bluetooth',
+                terminal: false,
+                filter: [TargetType.SPRITE, TargetType.STAGE],
+                arguments: {
+                }
+            },
+            {
+                opcode: 'disconnectRequestBlockBLE',
+                blockType: BlockType.COMMAND,
+                text: 'Disconnect Bluetooth',
                 terminal: false,
                 filter: [TargetType.SPRITE, TargetType.STAGE],
                 arguments: {
@@ -746,6 +766,11 @@ class Scratch3YourExtension {
         console.log("connectRequestBlockBLE()");
         initBLE();
         return bleIsConnected;
+    }
+    disconnectRequestBlockBLE({ }) {
+        console.log("disconnectRequestBlockBLE()");
+        endBLE();
+        return !bleIsConnected;
     }
     // sendRawCommandBlock({ COMMAND }) {
     //     if (!wsIsConnected)
