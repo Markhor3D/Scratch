@@ -108,21 +108,31 @@ var expressionCharacteristic;
 var textMessageCharacteristic;
 
 var BLEDevice;
+var useBytePercent = false;
 
 function writeBLEFloat(characteristic, floatValue) {
     if (!characteristic) {
         console.log("Characteristic invalid");
         return;
     }
-    if (!characteristic.properties.write) {
-        console.log("Characteristic not writable");
+    if (!characteristic.properties.write && !characteristic.properties.writeWithoutResponse) {
+        console.log("Characteristic not writable:", characteristic.properties);
         return;
     }
-    // Convert float value to ArrayBuffer
-    let buffer = new ArrayBuffer(4); // 4 bytes for a single float (Float32)
-    let dataView = new DataView(buffer);
-    dataView.setFloat32(0, floatValue, true); // true for little-endian encoding (adjust based on your system)
-
+    let buffer = new ArrayBuffer(); // 4 bytes for a single float (Float32)
+    if (useBytePercent){
+        floatValue = Math.round(floatValue) + 100;
+        // Convert float value to ArrayBuffer
+        buffer = new ArrayBuffer(1)
+        let dataView = new DataView(buffer);
+        dataView.setUint8(0, floatValue, true); // true for little-endian encoding (adjust based on your system)
+    }
+    else{
+        // Convert float value to ArrayBuffer
+        buffer = new ArrayBuffer(4)
+        let dataView = new DataView(buffer);
+        dataView.setFloat32(0, floatValue, true); // true for little-endian encoding (adjust based on your system)
+    }
     // Write the ArrayBuffer to the characteristic
     characteristic
         .writeValue(buffer)
@@ -138,8 +148,8 @@ function writeBLEString(characteristic, stringToSend) {
         // console.log("Characteristic invalid");
         return;
     }
-    if (!characteristic.properties.write) {
-        // console.log("Characteristic not writable");
+    if (!characteristic.properties.write && !characteristic.properties.writeWithoutResponse) {
+        console.log("Characteristic not writable:", characteristic.properties);
         return;
     }
     // Convert the string to an ArrayBuffer
@@ -181,24 +191,42 @@ function setTextMessage(text) {
 }
 function proximityACharacteristicChangeHandler(event) {
     var value = event.target.value;
-    var floatValue = new Float32Array(value.buffer)[0];
+    var floatValue = 0;
+    if (value.buffer.byteLength == 1) {// its a percent byte
+        floatValue = new Uint8Array(value.buffer)[0] - 100;
+        useBytePercent = true;
+    }
+    else
+        floatValue = new Float32Array(value.buffer)[0];
     // console.log("Received proximity A: ", floatValue);
     Sensors[0] = floatValue;
 }
 function proximityBCharacteristicChangeHandler(event) {
     var value = event.target.value;
-    var floatValue = new Float32Array(value.buffer)[0];
+    var floatValue = 0;
+    if (value.buffer.byteLength == 1)  {// its a percent byte
+        floatValue = new Uint8Array(value.buffer)[0] - 100;
+        useBytePercent = true;
+    }
+    else
+        floatValue = new Float32Array(value.buffer)[0];
     // console.log("Received proximity B: ", floatValue);
     Sensors[1] = floatValue;
 }
 function distancCharacteristicChangeHandler(event) {
     var value = event.target.value;
-    var floatValue = new Float32Array(value.buffer)[0];
+    var floatValue = 0;
+    if (value.buffer.byteLength == 1)  {// its a percent byte
+        floatValue = new Uint8Array(value.buffer)[0] - 100;
+        useBytePercent = true;
+    }
+    else
+        floatValue = new Float32Array(value.buffer)[0];
     // console.log("Received distance: ", floatValue);
     Sensors[2] = floatValue;
 }
-function endBLE(){
-    if(bleIsConnected){
+function endBLE() {
+    if (bleIsConnected) {
         BLEDevice.gatt.disconnect();
         bleIsConnected = false;
     }
@@ -258,19 +286,19 @@ function initBLE() {
                                                     service.getCharacteristic(textMessageUUID).then((ch10) => {
                                                         console.log("Got: textMessage characteristic");
                                                         textMessageCharacteristic = ch10;
-                                                        
+
                                                         proximityACharacteristic.startNotifications().then((_) => {
                                                             proximityACharacteristic.addEventListener(
                                                                 "characteristicvaluechanged",
                                                                 proximityACharacteristicChangeHandler
                                                             );
-                                                            
+
                                                             proximityBCharacteristic.startNotifications().then((_) => {
                                                                 proximityBCharacteristic.addEventListener(
                                                                     "characteristicvaluechanged",
                                                                     proximityBCharacteristicChangeHandler
                                                                 );
-                                                                
+
                                                                 distancCharacteristic.startNotifications().then((_) => {
                                                                     distancCharacteristic.addEventListener(
                                                                         "characteristicvaluechanged",
@@ -361,7 +389,7 @@ function sendServo1Command(angle) {
 }
 function sendServo2Command(angle) {
 
-    if (lastServo2 == angle) 
+    if (lastServo2 == angle)
         return true;
     if (bleIsConnected) {
         lastServo2 = angle;
@@ -406,7 +434,7 @@ function sendServo2SpeedCommand(speed) {
 }
 function sendExpressionCommand(expression) {
     var com = "express " + expression;
-    if (lastScreenMsg == com) 
+    if (lastScreenMsg == com)
         return true;
     if (bleIsConnected) {
         lastScreenMsg = com;
@@ -414,14 +442,16 @@ function sendExpressionCommand(expression) {
         return true;
     }
     else {
-        if (sendCommand(com)) 
+        if (sendCommand(com))
             lastScreenMsg = com;
         return true;
     }
 }
 function sendTextMessageCommand(text) {
+    if (text.length > 16)
+        text = text.substring(0, 16);
     var com = "show " + text;
-    if (lastScreenMsg == com) 
+    if (lastScreenMsg == com)
         return true;
     if (bleIsConnected) {
         lastScreenMsg = com;
@@ -429,7 +459,7 @@ function sendTextMessageCommand(text) {
         return true;
     }
     else {
-        if (sendCommand(com)) 
+        if (sendCommand(com))
             lastScreenMsg = com;
         return true;
     }
@@ -492,7 +522,7 @@ class Scratch3YourExtension {
                         type: ArgumentType.STRING
                     }
                 }
-            }, */ 
+            }, */
             {
                 opcode: 'connectRequestBlockBLE',
                 blockType: BlockType.COMMAND,
