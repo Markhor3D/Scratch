@@ -166,10 +166,10 @@ function writeBLEString(characteristic, stringToSend) {
         });
 }
 function setLeftMotor(value) {
-    writeBLEFloat(leftMotorCharacteristic, value / 100);
+    writeBLEFloat(leftMotorCharacteristic, value);
 }
 function setRightMotor(value) {
-    writeBLEFloat(rightMotorCharacteristic, value / 100);
+    writeBLEFloat(rightMotorCharacteristic, value);
 }
 function setServoAAngle(value) {
     writeBLEFloat(servoAAngleCharacteristic, value);
