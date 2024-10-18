@@ -218,6 +218,8 @@ function distancCharacteristicChangeHandler(event) {
     var floatValue = 0;
     if (value.buffer.byteLength == 1)  {// its a percent byte
         floatValue = new Uint8Array(value.buffer)[0] - 100;
+        // distance needs to change from 0 to 1200
+        floatValue = (floatValue + 100) * 6;
         useBytePercent = true;
     }
     else
@@ -231,7 +233,14 @@ function endBLE() {
         bleIsConnected = false;
     }
 }
+function onDisconnected(event) {
+  // Object event.target is Bluetooth Device getting disconnected.
+  alert('M3D Go disconnected!');
+  bleIsConnected = false;
+}
 function initBLE() {
+    
+    console.log("begin");
     console.log("begin");
     console.log("Requesting any Bluetooth Device...");
     navigator.bluetooth
@@ -240,14 +249,17 @@ function initBLE() {
             filters: [{ services: [m3DScratchServiceUUID] }],
         })
         .then((device) => {
+            alert('Connecting, please wait...');
             console.log("Connecting to GATT Server...");
             BLEDevice = device;
+            BLEDevice.addEventListener('gattserverdisconnected', onDisconnected);
             return device.gatt.connect();
         })
         .then((server) => {
             // Note that we could also get all services that match a specific UUID by
             // passing it to getPrimaryServices().
             console.log("Getting Services...");
+            alert('Almost there...');
             return server.getPrimaryService(m3DScratchServiceUUID);
         })
         .then((service) => {
@@ -256,7 +268,7 @@ function initBLE() {
             service.getCharacteristic(proximityAUUID).then((ch0) => {
                 console.log("Got: proximityA characteristic");
                 proximityACharacteristic = ch0;
-                service.getCharacteristic(proximityBUUID).then((ch1) => {
+                service.getCharacteri65stic(proximityBUUID).then((ch1) => {
                     console.log("Got: proximityB characteristic");
                     proximityBCharacteristic = ch1;
                     service.getCharacteristic(distanceUUID).then((ch2) => {
@@ -323,6 +335,7 @@ function initBLE() {
         })
         .catch((error) => {
             console.log("Argh! " + error);
+            alert('Could not connect to the selected M3D Go. Make sure the device is in range and try again.');
         });
 }
 
@@ -469,6 +482,7 @@ class Scratch3YourExtension {
     constructor(runtime) {
         // put any setup for your extension here
         console.log('M3D Go Extension loaded');
+        console.log('Version: 2024101801');
     }
 
     /**
@@ -763,7 +777,7 @@ class Scratch3YourExtension {
             }],
             menus: {
                 expressionsMenu: {
-                    items: ["smile", "confused", "frustrated", "funny", "joy", "laugh", "like", "love", "wink", "stuck"]
+                    items: ["smile", "confused", "frustrated", "funny", "joy", "laugh", "like", "love", "wink", "stuck", "battery"]
                 }
             }
         };
